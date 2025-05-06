@@ -17,147 +17,252 @@ Se recomienda usar Visual Studio Code para ir ejecutando el Notebook a medida qu
 
 ## 1 Histogramas
 
-### Ejercicio 6
-
-Para reproducir los resultados del Ejercicio 6, se deben ejecutar previamente las primeras tres celdas correspondientes a: 
-- Librerías utilizadas.
-- Funciones auxiliares `printImg()` y `readImg()`.
-- Lectura de `Lenna.png`.
-
-**Inciso a)**
-
-> Ir y ejecutar subsección "Método 1"
-
-Se utilizó `imagen_lenna_gris = cv2.cvtColor(imagen_lenna, cv2.COLOR_RGB2GRAY)` para convertir la imagen a escala de grises. 
-
-```python
-imagen_lenna = cv2.imread('./imagenes/Lenna.png', cv2.COLOR_BGR2RGB)
-
-if imagen_lenna is not None:
-  imagen_lenna_gris = cv2.cvtColor(imagen_lenna, cv2.COLOR_RGB2GRAY)
-  printImg(imagen_lenna_gris,gray = True)
-else:
-    print("Error: imagen_lenna no se ha cargado correctamente.")
-```
-
-**Inciso b)**
-
-> Ir y ejecutar subsección "Método 2"
-
-Se utilizó `cv2.split` para separar los canales de la imagen y la fórmula de luminancia para convertir la imagen. 
-
-```python
-if imagen_lenna is not None:
-  b, g, r = cv2.split(imagen_lenna)
-
-  imagen_lenna_gris_luminancia = 0.3 * r + 0.59 * g + 0.11 * b
-  imagen_lenna_gris_luminancia = imagen_lenna_gris_luminancia.astype(np.uint8)
-
-  printImg(imagen_lenna_gris_luminancia, gray=True)
-
-else:
-    print("Error: imagen_lenna no se ha cargado correctamente.")
-
-```
-
-**Inciso c)**
-> Ir y ejecutar subsección "Método 3"
-
-Se utilizó `rgb2gray` de `scikit-image` para convertir la imagen en blanco y negro. 
-
-```python
-imagen_lenna_rgb = cv2.cvtColor(imagen_lenna, cv2.COLOR_BGR2RGB)
-imagen_lenna_gris_scikit = rgb2gray(imagen_lenna_rgb)
-plt.imshow(imagen_lenna_gris_scikit, cmap='gray')
-plt.show()
-```
-
-**Inciso d)**
-> Ir y ejecutar subsección "Pregunta 1"
-
-Luego de obtener el `shape` de cada imagen, es posible observar que la imagen original conserva sus tres canales (BGR) mientras que las versiones en escalas en grises poseen un único canal.
-
-**Inciso e)**
-> Ir y ejecutar subsección "Pregunta 2"
-
-Luego de obtener el `dtype` de cada imagen, es posible observar que la imagen a color tiene una profundidad de 24 bits, 8 por cada canal.Las dos primeras imágenes en escala de grises tienen una profundidad de 8 bits, un único canal. La última imagen está en formato `float64`, lo que indica una profundidad de 64 bits en punto flotante.
-
 ### Ejercicio 7
+
 > Ir y ejecutar subsección "Ejercicio 7"
 
-Se utilizó `cv2.COLOR_RGB2HSV` y `cv2.COLOR_RGB2HLS` para convertir la imagen en perfiles de color HSV y HSL. Para CMYK, se calculó cada componente por separado, y luego fueron unidos. 
+Para realizar el ajuste de histogramas, se hizo uso de `skimage.exposure.match_histograms(img1, img4)`.
 
 ```python
-# HSV
-imagen_hsv = cv2.cvtColor(imagen_lenna, cv2.COLOR_RGB2HSV)
+matched_img = match_histograms(img1, img4)
 
-# HLS
-imagen_hsl = cv2.cvtColor(imagen_lenna, cv2.COLOR_RGB2HLS)
+hist1 = cv2.calcHist([img1], [0], None, [256], [0, 256])
+hist4 = cv2.calcHist([img4], [0], None, [256], [0, 256])
+hist_matched = cv2.calcHist([matched_img.astype(np.uint8)], [0], None, [256], [0, 256]) 
 
-# CMYK
-bgr_normalized = imagen_lenna.astype(float) / 255.0
-b = bgr_normalized[:, :, 0]
-g = bgr_normalized[:, :, 1]
-r = bgr_normalized[:, :, 2]
-
-k = 1 - np.max(bgr_normalized, axis=2)
-c = (1 - r - k) / (1 - k + 1e-10)
-m = (1 - g - k) / (1 - k + 1e-10)
-y = (1 - b - k) / (1 - k + 1e-10)
-
-cmyk = np.stack((c, m, y, k), axis=2)
-cmyk_image = (cmyk*255).astype(np.uint8)
+hist1 = hist1 / np.sum(hist1)
+hist4 = hist4 / np.sum(hist4)
+hist_matched = hist_matched / np.sum(hist_matched)
 ```
+
+Luego de transformar la distribución de intensidades de `paisaje1.jpg` para que se parezca a la de `paisaje4.jpg` por medio de `skimage.exposure.match histograms()`, es posible ver que los histogramas, luego del ajuste, presentan mayor cantidad de similitudes en el rango de valores entre $0$ y $110$ (aproximadamente) con pequeñas oscilaciones. Para valores superiores a $110$, la versión ajustada de `paisaje1.jpg` contiene frecuencias muy altas para valores específicos, cercanos a $110$ y $190$.
+
+### Ejercicio 8
+
+> Ir y ejecutar subsección "Ejercicio 8"
+
+Para realizar la ecualización de histograma, se hizo uso de `cv2.equalizeHist(img)`.
+
+```python
+equ = cv2.equalizeHist(img4)
+
+hist_original = cv2.calcHist([img4], [0], None, [256], [0, 256])
+hist_ecualizado = cv2.calcHist([equ], [0], None, [256], [0, 256])
+
+hist_original = hist_original / np.sum(hist_original)
+hist_ecualizado = hist_ecualizado / np.sum(hist_ecualizado)
+```
+
+Al comparar las imágenes y sus histogramas, es posible ver que el contraste de la imagen original ha aumentado de forma notable en su versión ecualizada. Como es posible ver en el histograma de la versión ecualizada, las intensidades se distribuyen de forma más equitativa, aumentando las frecuencias de los valores más altos que eran menos frecuentes en la imagen original.
+
+### Ejercicio 9
+
+> Ir y ejecutar subsección "Ejercicio 9"
+
+Para realizar la umbralización manual, se hizo uso de `cv2.threshold(img1, threshold_value, 255, cv2.THRESH_BINARY)`. Para el método de Otsu, se hizo uso de `cv2.threshold(img1, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)`.
+
+```python
+threshold_value = 240  # Valor de umbral manual
+
+_, img_umbralizada_manual = cv2.threshold(img1, threshold_value, 255, cv2.THRESH_BINARY)
+
+_, img_umbralizada_otsu = cv2.threshold(img1, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+```
+
+Fragmento extraido de [https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html]:
+
+> Con la umbralización global, usamos un valor elegido arbitrariamente como umbral. En cambio, el método de Otsu evita tener que elegir un valor y lo determina automáticamente.
+
+> Considera una imagen con solo dos valores de intensidad distintos (una imagen bimodal), donde el histograma consistiría únicamente en dos picos. Un buen umbral estaría en el medio de esos dos valores. De manera similar, el método de Otsu determina un valor de umbral global óptimo a partir del histograma de la imagen.
+
+> Para hacerlo, se utiliza la función cv.threshold(), donde se pasa cv.THRESH_OTSU como una bandera adicional. El valor del umbral puede elegirse arbitrariamente. Luego, el algoritmo encuentra el valor de umbral óptimo, el cual se devuelve como la primera salida.
+
+### Ejercicio 11
+
+> Ir y ejecutar subsección "Ejercicio 11"
+
+En este ejercicio, aplicamos corrección gamma a una imagen en escala de grises, dividiéndola en cuatro regiones y aplicando un valor de gamma diferente a cada una para modificar su brillo y contraste de manera no lineal. La función `gamma_correction()` normaliza los valores de píxeles al rango [0, 1], aplica la transformación 
+$I'=I^γ$, y luego los reescala a [0, 255].
+
+```python
+def gamma_correction(image, gamma):
+    image_normalized = image / 255.0
+    image_corrected = np.power(image_normalized, gamma)
+    return (image_corrected * 255).astype(np.uint8)
+```
+
+## 2 Combinación de Imágenes
+
+### Ejercicio 3
+> Ir y ejecutar subsección "Ejercicio 3"
+
+En este ejercicio, aplicamos `cv2.multiply()` y `cv2.divide()` sobre dos imágenes para luego visualizar los resultados 
+
+```python
+img3 = cv2.imread('./imagenes/paisaje3.jpg')
+img4 = cv2.imread('./imagenes/paisaje4.jpg')
+
+img_multiplicada = cv2.multiply(img3, img4)
+img_dividida_1 = cv2.divide(img3, img4)
+img_dividida_2 = cv2.divide(img4, img3)
+```
+
+### Ejercicio 5
+> Ir y ejecutar subsección "Ejercicio 5"
+
+En este ejercicio, aplicamos `cv2.bitwise_and()`, `cv2.bitwise_or()` y `cv2.bitwise_xor()` sobre dos imágenes con `cv2.circle` como máscara para fusionarlas. 
+
+```python
+mask = np.zeros(img3.shape[:2], dtype=np.uint8)
+cv2.circle(mask, (img3.shape[1] // 2, img3.shape[0] // 2), 100, 255, -1)
+
+img_and = cv2.bitwise_and(img3, img4, mask=mask)
+img_or = cv2.bitwise_or(img3, img4, mask=mask)
+img_xor = cv2.bitwise_xor(img3, img4, mask=mask)
+```
+
+En los tres casos, cuando se provee la máscara circular, las operaciones AND, OR y XOR se realizan entre las dos imágenes sólo donde los valores de la máscara no son iguales a cero, es decir, en el interior del círculo.
+
+Las operaciones bitwise AND, OR y XOR en imágenes BGR (Blue, Green, Red) funcionan canal por canal y pixel por pixel, comparando directamente los valores binarios de cada componente del color. Como los valores están en el rango [0, 255], cada componente tiene una representación binaria de 8 bits.
+
+Viendo nuestras imágenes, podemos ver que aplicar el operador AND resulta en una imagen oscura porque el operador sólo mantiene un bit en 1 si los bits también son 1, y cero en caso contrario. Por ejemplo:
+
+$$
+pixel_{img3}(x,y) = 11001010  \\
+pixel_{img4}(x,y) = 10101100  \\
+resultado  = 10001000
+$$
+
+Aplicar el operador OR, por otro lado, resulta en una imagen brillante, ya que el operador mantiene un bit en 1 si al menos uno de los bits es 1. Por ejemplo:
+
+$$
+pixel_{img3}(x,y)  = 11001010  \\
+pixel_{img4}(x,y)  = 10101100  \\
+resultado = 11101110
+$$
+
+Aplicar el operador XOR, finalmente, resalta las diferencias entre las dos imágenes, ya que el operador mantiene un bit en 1 si los bits son diferentes. Por ejemplo:
+
+$$
+pixel_{img3}(x,y)  = 11001010  \\
+pixel_{img4}(x,y)  = 10101100  \\
+resultado = 01100110
+$$
 
 ### Ejercicio 8
 > Ir y ejecutar subsección "Ejercicio 8"
 
-Se utilizó `cv2.cvtColor(imagen_lenna_gris, cv2.COLOR_GRAY2RGB)` para convertir la imagen en escala de grises a color, `imagen_lenna_gris_a_rgb.shape` para verificar su forma, y `np.array_equal(b, g) and np.array_equal(g, r)` para verificar si los canales de la imagen tienen los mismos valores.
+En este ejercicio:
+- Se obtiene la región de interés de `paisaje3.jpg`. 
+- Se crea la máscara de la mariposa por medio de una umbralización y se invierte.
+- Se superpone la máscara invertida sobre la región de interés por medio de `bitwise_and` y la máscara invertida.
+- Se obtiene el foreground de la mariposa con `bitwise_and` y la máscara original.
+- Se suma el fondo de la región de interés enmascarada con el foreground de la mariposa.
+- Se reemplaza la suma anterior en la imagen original.
 
-El resultado del ejercicio fue que la conversión replicó el canal de la imagen en escala de grises tres veces, y tienen los mismos valores.
 
-## 2 Compresión de Imágenes
-### Ejercicio 2
+```python
+# Paso 1: Región de interés
+roi = img2[y_start:y_end, x_start:x_end]
 
-**PSNR (Peak Signal-to-Noise Ratio)**
+# Paso 2: Crear máscara ignorando fondo blanco
+gray_mariposa = cv2.cvtColor(mariposa, cv2.COLOR_BGR2GRAY)
+_, mask = cv2.threshold(gray_mariposa, 240, 255, cv2.THRESH_BINARY_INV)
 
-Métrica que mide la diferencia promedio entre la imagen original y la comprimida. Basada en el error cuadrático medio.
-Tiene la siguiente fórmula:
+# Paso 3: Invertir máscara
+mask_inv = cv2.bitwise_not(mask)
 
-$$PSNR = 10 \cdot \log_{10}\left(\frac{MAX^2}{MSE}\right)$$
+# Paso 4: Fondo de la ROI enmascarado
+img2_bg = cv2.bitwise_and(roi, roi, mask=mask_inv)
 
-$$\text{MAX es el valor máximo posible de un píxel (255 en imágenes de 8 bits).}$$
+# Paso 5: Parte de la mariposa sin fondo blanco
+mariposa_fg = cv2.bitwise_and(mariposa, mariposa, mask=mask)
 
-$$\text{MSE es el error cuadrático medio entre las dos imágenes.}$$
+# Paso 6: Suma de ambas partes
+dst = cv2.add(img2_bg, mariposa_fg)
 
-Si se tienen valores mayores de 40, se considera una calidad de compresión muy buena, casi sin pérdida. Si se encuentran entre 30 y 40, se la considera buena. Si esta entre 20 y 30, regular con una visible pérdida. Si es menor de 20 se la considera mala.
+# Paso 7: Reemplazo en img2
+img2_final = img2.copy()
+img2_final[y_start:y_end, x_start:x_end] = dst
+```
 
-Tiene el inconveniente de que no considera como percibe el ojo humano la imagen.
+## 3 Dominio Espacial
 
-**SSIM (Structural Similarity Index)**
+### Ejercicio 8
+> Ir y ejecutar subsección "Ejercicio 8"
 
-Métrica que evalúa la similitud estructural entre dos imágenes, teniendo en cuenta la luz y el contraste. Se aproxima mucho mejor a cómo percibimos la calidad bisual las personas.
+En este ejercicio, aplicamos `cv2.GaussianBlur()` y `cv2.Sobel()` sobre una imagen para luego visualizar los resultados y analizar las diferencias en la detección de bordes. 
 
-Si el valor es cercano a 1 significa que las imágenes son muy similares, si es cercano a 0 implica que son muy distintas.
+```python
+# Aplicar filtro gaussiano
+blurred_img = cv2.GaussianBlur(img, (5, 5), 0)
 
-Su fórmula es mucho más compleja que la anterior:
+# Operador Sobel sin suavizado
+sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5)
+sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5)
+sobel_img = cv2.magnitude(sobelx, sobely)
 
-$$ SSIM(x, y) = \frac{(2\mu_x \mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$$
+# Operador Sobel con suavizado
+sobelx_blurred = cv2.Sobel(blurred_img, cv2.CV_64F, 1, 0, ksize=5)
+sobely_blurred = cv2.Sobel(blurred_img, cv2.CV_64F, 0, 1, ksize=5)
+sobel_blurred_img = cv2.magnitude(sobelx_blurred, sobely_blurred)
+```
 
-$$\mu_x, \mu_y: \text{medias de las imágenes x e y}$$
-$$\sigma_x^2, \sigma_y^2: \text{varianzas}$$
-$$\sigma_{xy}: \text{covarianza entre x e y}$$
-$$C_1, C_2: \text{constantes pequeñas para evitar división por cero}$$
+### Ejercicio 12
+> Ir y ejecutar subsección "Ejercicio 12"
 
-### Ejercicio 6
-> Ir y ejecutar subsección "Ejercicio 6"
+En este ejercicio, se aplican diferentes métodos de detección de bordes a imágenes en escala de grises para compararlos visualmente.
 
-Se construyeron las siguientes funciones para la resolución del Ejercicio 6:
-- `rle_encode(img)`: Codifica una imagen en escala de grises usando Run-Length Encoding (RLE), representando secuencias de píxeles repetidos como pares (valor, cantidad).
-- `rle_decode(encoded, shape)`: Reconstruye una imagen a partir de una lista RLE de pares (valor, cantidad), devolviéndola con la forma (shape) original.
+- Sobel: Calcula la derivada de primer orden en las direcciones horizontal (x) y vertical (y) utilizando el operador Sobel. Luego, combina ambas con `cv2.magnitude()` para obtener la magnitud del gradiente total, resaltando los bordes donde hay cambios bruscos de intensidad.
 
-- `procesar_imagen(path)`: Carga una imagen, la convierte a escala de grises, aplica compresión y descompresión RLE, calcula el PSNR, estima el tamaño comprimido y muestra los resultados y comparaciones visuales.
+- Prewitt: Similar al Sobel, pero con un kernel más simple. Se aplica mediante `cv2.filter2D()` con kernels definidos manualmente para x e y. También se calcula la magnitud del gradiente para detectar bordes.
 
-A partir de la implementación del algoritmo de compresión RLE, se puede observar que su eficacia varía significativamente según las características de la imagen. En el caso de la imagen `img_color1.png`, se logró una reducción considerable del tamaño, pasando de 61.48 KB a un estimado de 28.12 KB, lo que indica que contenía muchas secuencias repetidas de píxeles, haciendo que la compresión sea efectiva. En cambio, las imágenes `Lenna.png` y `paisaje2.jpg` mostraron un comportamiento opuesto: el tamaño estimado tras la compresión fue igual o incluso mayor al tamaño en disco original, debido a la falta de patrones repetitivos evidentes, lo que demuestra que RLE no es adecuado para imágenes con alta variabilidad tonal o detalles complejos.
+- Laplace (Laplacian): Calcula la segunda derivada de la imagen. Detecta bordes donde hay un cambio rápido en la tasa de cambio de intensidad. Es más sensible al ruido, pero efectivo para encontrar todos los bordes (sin distinguir dirección).
 
-Por otro lado, el valor de PSNR (infinito) entre la imagen original y la reconstruida en todos los casos confirma que la reconstrucción es perfecta, es decir, no se pierde calidad en el proceso.
+- Canny:
+Un método más sofisticado que aplica suavizado (ya aplicado con GaussianBlur), cálculo del gradiente, supresión de no máximos, y umbralización con histéresis.
+
+```python
+# Aplicar suavizado Gaussiano
+blurred_img = cv2.GaussianBlur(img, (5, 5), 0)
+
+# Sobel
+sobelx = cv2.Sobel(blurred_img, cv2.CV_64F, 1, 0, ksize=5)
+sobely = cv2.Sobel(blurred_img, cv2.CV_64F, 0, 1, ksize=5)
+sobel_img = cv2.magnitude(sobelx, sobely)
+
+# Prewitt
+kernelx = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
+kernely = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+prewittx = cv2.filter2D(blurred_img, -1, kernelx).astype(np.float32)
+prewitty = cv2.filter2D(blurred_img, -1, kernely).astype(np.float32)
+prewitt_img = cv2.magnitude(prewittx, prewitty)
+
+# Laplace
+laplacian_img = cv2.Laplacian(blurred_img, cv2.CV_64F)
+
+# Canny
+canny_img = cv2.Canny(blurred_img, 50, 150)
+```
+
+### Ejercicio 13
+> Ir y ejecutar subsección "Ejercicio 13"
+
+En este ejercicio, aplicamos `cv2.GaussianBlur()` y dos operaciones para obtener el filtro de paso alto y la imagen con mayor nivel de detalle.
+
+```python
+blurred = cv2.GaussianBlur(img, (5, 5), 0)
+high_pass = img - blurred
+sharpened = img + high_pass
+```
+
+### Ejercicio 15
+> Ir y ejecutar subsección "Ejercicio 15"
+
+En este ejercicio, aplicamos `cv2.GaussianBlur()`, con dos valores de sigma distintos, y una resta para obtener la diferencia de gaussianos.
+
+```python
+blurred1 = cv2.GaussianBlur(img, (ksize1, ksize1), sigma1)
+blurred2 = cv2.GaussianBlur(img, (ksize2, ksize2), sigma2)
+dog_image = blurred1 - blurred2
+```
