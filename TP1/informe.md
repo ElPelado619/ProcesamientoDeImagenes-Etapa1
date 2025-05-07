@@ -11,9 +11,6 @@ Este trabajo corresponde al Trabajo Práctico 1 de Procesamiento de Imágenes, y
 - [Informe hecho en LaTeX (PDI_TP1.ipynb)](TP1_PDI.pdf) con las respuestas teóricas de los ejercicios.
 - Carpeta `imágenes/` con las imágenes utilizadas para la resolución de este Trabajo Práctico.
 
-Para poder replicar los resultados, se recomienda crear un entorno virtual, instalar las depedencias contenidas en [requirements.txt](requirements.txt) y correr las celdas una por una, o todas juntas, de forma secuencial. Se ha utilizado Python 3.10.12 como Kernel para ejecutar el [notebook interactivo](PDI_TP1.ipynb).
-
-Se recomienda usar Visual Studio Code para ir ejecutando el Notebook a medida que se va leyendo este informe.
 
 ## 1 Modos de Color en Imágenes
 

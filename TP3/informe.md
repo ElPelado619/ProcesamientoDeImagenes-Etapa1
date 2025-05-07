@@ -13,9 +13,7 @@ Este trabajo corresponde al Trabajo Práctico 3 de Procesamiento de Imágenes, y
 - [Notebook interactivo de Python (PDI_TP3.ipynb)](PDI_TP3.ipynb) con la resolución de los ejercicios y su código fuente. Este puede ejecutarse localmente, celda por celda.
 - Carpeta `imágenes/` con las imágenes utilizadas para la resolución de este Trabajo Práctico.
 
-Para poder replicar los resultados, se recomienda crear un entorno virtual, instalar las depedencias contenidas en [requirements.txt](requirements.txt) y correr las celdas una por una, o todas juntas, de forma secuencial. Se ha utilizado Python 3.10.12 como Kernel para ejecutar el [notebook interactivo](PDI_TP3.ipynb).
 
-Se recomienda usar Visual Studio Code para ir ejecutando el Notebook a medida que se va leyendo este informe.
 
 ## 1. Operadores morfológicos
 

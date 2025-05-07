@@ -1,0 +1,3 @@
+Para poder replicar los resultados, se recomienda crear un entorno virtual, instalar las depedencias contenidas en [requirements.txt](requirements.txt) y correr las celdas una por una, o todas juntas, de forma secuencial. Se ha utilizado Python 3.10.12 como Kernel para ejecutar los notebooks
+
+Se recomienda usar Visual Studio Code para ir ejecutando el Notebook a medida que se va leyendo este informe.
